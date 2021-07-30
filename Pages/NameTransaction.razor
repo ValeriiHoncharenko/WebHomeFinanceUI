@@ -1,0 +1,121 @@
+﻿@page "/nametransaction"
+@using WebHomeFinanceUI.Models
+@using WebHomeFinanceUI.Data
+@using System.Net.Http
+@inject NameTransactionService TransactionService
+@inject TypeTransactionService TypeService
+
+<h1>Name Transaction</h1>
+
+    <EditForm Model="@newType" OnValidSubmit="@InsertType">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <label>
+        Input Name Transaction:
+        <InputText id="Name" @bind-Value="newType.Name" />
+    </label>
+    <label>
+        @if (typetransactions != null)
+        {
+            <select id="SearchTypeTransaction" name="Name" @onchange="DoStuff" class="form-control1">
+                <option>@InitialText</option>
+                @foreach (var tt in typetransactions)
+                {
+                    <option value="@tt.Id">@tt.TypeTrans</option>
+                }
+            </select>
+        }
+    </label>
+    <button type="submit" class=" btn btn-primary">Add</button>
+</EditForm> 
+
+<h1></h1>
+<h4>Current Name Transaction </h4>
+
+@if (nametransactions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type Transaction</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var nametransaction in nametransactions)
+            {
+                var typeTr = typetransactions.Where(u => u.Id == nametransaction.TypeTransaction);
+                @foreach (var name in typeTr)
+                {
+                    <tr>
+                        <td>@nametransaction.Name</td>
+                        <td>@name.TypeTrans</td>
+                        <td>
+                            <a class="btn btn-success" href="nametransactionedit/@nametransaction.Id">Edit</a>
+                            <button class="btn btn-warning" type="button" @onclick="@(e => DeleteType(nametransaction.Id))">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<RootObjectType> typetransactions;
+    private List<RootObject> nametransactions;
+    DisplayNameModel newType = new DisplayNameModel();
+    RootObject editType = new RootObject();
+    [Parameter] public string InitialText { get; set; } = "Select Type Transaction";
+    private string selectedString { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+    private async Task LoadDataAsync()
+    {
+        typetransactions = await TypeService.OnGetAsync();
+        nametransactions = await TransactionService.OnGetAsync();
+    }
+
+    private void DoStuff(ChangeEventArgs e)
+    {
+        selectedString = e.Value.ToString();
+        Console.WriteLine("It is definitely: " + selectedString);
+    }
+
+    protected async Task InsertType()
+    {
+        RootObject p = new RootObject
+        {
+            Id = newType.Id,
+            Name = newType.Name,
+            TypeTransaction = int.Parse(selectedString)
+        };
+
+        HttpResponseMessage http = await TransactionService.InsertNewTypeAsync(p);
+        nametransactions.Add(p);
+        newType = new DisplayNameModel();
+        await LoadDataAsync();
+    }
+
+    protected async Task DeleteType(int id)
+    {
+        await TransactionService.DeleteTypeAsync(id);
+        await LoadDataAsync();
+    }
+}
+
+
+
+
+
+

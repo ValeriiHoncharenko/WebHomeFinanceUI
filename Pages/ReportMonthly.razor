@@ -1,0 +1,96 @@
+﻿@page "/reportmonthly"
+@using WebHomeFinanceUI.Data
+@inject ReportMonthlyService RepMonService
+
+<h1>Monthly Report</h1>
+<p></p>
+<p>
+    <label>
+        <EditForm Model="@CurrentDate">
+            <InputDate @bind-Value="@CurrentDate.InputDateStart"  @bind-Value:format="dd-MM-yyyy" />
+        </EditForm>
+    </label>    
+    <br/>
+    <label>
+        <EditForm Model="@CurrentDate">
+            <InputDate @bind-Value="@CurrentDate.InputDateEnd"  @bind-Value:format="dd-MM-yyyy" />
+        </EditForm>
+    </label>
+    <button @onclick="OnInitializedAsync">
+        Update date
+    </button>
+</p>
+<p>
+    <code>Date Start</code>: @CurrentDate.InputDateStart.ToString("dd MMMM yyyy")
+    <code>Date End</code>: @CurrentDate.InputDateEnd.ToString("dd MMMM yyyy")
+</p>
+
+@code {
+    DateStart CurrentDate = new DateStart();
+    public class DateStart
+    {
+        public DateTime InputDateStart { get; set; } = DateTime.Today;
+        public DateTime InputDateEnd { get; set; } = DateTime.Today;
+    }
+
+   
+}
+
+@if (reportsmonthly == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Date Transaction</th>
+                <th>Name</th>
+                <th>Type Transaction</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in reportsmonthly)
+            {
+                if (item.Id == 0)
+                {
+                    <tr style="background-color:#808080;">
+                        <td></td>
+                        <td></td>
+                        <td>@item.Name</td>
+                        <td>@item.TypeTransaction</td>
+                        <td>@item.Amount</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.DateTransaction</td>
+                        <td>@item.Name</td>
+                        <td>@item.TypeTransaction</td>
+                        <td>@item.Amount</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<RootObjectReport> reportsmonthly;
+    protected override async Task OnInitializedAsync()
+    {
+        reportsmonthly = await RepMonService.OnGetMonthlyAsync(CurrentDate.InputDateStart.Date.ToString("MM.dd.yyyy"), CurrentDate.InputDateEnd.Date.ToString("MM.dd.yyyy"));
+    }
+}

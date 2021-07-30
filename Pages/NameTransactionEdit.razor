@@ -1,0 +1,34 @@
+﻿@page "/nametransactionEdit/{nametransactionId:int}"
+@using WebHomeFinanceUI.Models
+@using WebHomeFinanceUI.Data
+@using System.Net.Http
+@using System.Web
+@inject NavigationManager NavigationManager
+@inject NameTransactionService TransactionService
+
+<h2>NameTransactionEdit</h2>
+
+<Form ButtonText="Update" editType="updateType"
+      OnValidSubmit="@SaveItem" />
+@code {
+
+    [Parameter] public int nametransactionId { get; set; }
+    static HttpClient client = new HttpClient();
+    private List<RootObject> nametransactions;
+    private RootObject updateType = new RootObject();
+
+    private string selectedString { get; set; }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        nametransactions = await TransactionService.OnGetAsync();
+        updateType = nametransactions.Single(i => i.Id == nametransactionId);
+    }
+
+    protected async Task SaveItem()
+    {       
+        await TransactionService.UpdateTypeAsync(updateType);
+        NavigationManager.NavigateTo("NameTransaction");
+    }
+
+}

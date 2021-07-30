@@ -1,0 +1,130 @@
+﻿@page "/registertransaction"
+@using WebHomeFinanceUI.Models
+@using WebHomeFinanceUI.Data
+@using System.Net.Http
+@using C1.Blazor.Input
+@inject RegisterTransactionService RegisterService
+@inject NameTransactionService TransactionService
+
+<h1>Register Transaction</h1>
+
+<EditForm Model="@newType" OnValidSubmit="@InsertType">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <label>
+        Input Date Transaction:
+        <InputDate id="DateTransaction" @bind-Value="newType.DateTransaction" />
+
+    </label>
+    <label>
+        @if (nametransactions != null)
+        {
+
+            <select id="SearchNameTransaction" name="Name" @onchange="DoStuff" class="form-control1">
+                <option>@InitialText</option>
+                @foreach (var nt in nametransactions)
+                {
+                    <option value="@nt.Id">@nt.Name</option>
+
+                }
+            </select>
+        }
+    </label>
+    <label>
+        Input Amount Transaction:
+        <InputNumber id="Amount" @bind-Value="newType.Amount" />
+    </label>
+
+    <button type="submit" class=" btn btn-primary">Add</button>
+</EditForm>
+<code>Date Transaction</code>: @newType.DateTransaction.ToString("dd MMMM yyyy")
+
+<h1></h1>
+<h4>Current NameTransactionAdd</h4>
+
+
+@if (registertransactions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date Transaction</th>
+                <th>Transaction Id</th>
+                <th>Amount</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var registertransaction in registertransactions)
+            {
+                var nameTr = nametransactions.Where(u => u.Id == registertransaction.NameTransactionId);
+                @foreach (var name in nameTr)
+                {
+                    <tr>
+                        <td>@registertransaction.DateTransaction.Date</td>
+                        <td>@name.Name</td>
+                        <td>@registertransaction.Amount</td>
+                        <td>
+                            <a class="btn btn-success" href="registertransactionedit/@registertransaction.Id">Edit</a>
+                            <button class="btn btn-warning" type="button" @onclick="@(e => DeleteType(registertransaction.Id))">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<RootObjectRegister> registertransactions;
+    private List<RootObject> nametransactions;
+    DisplayRegisterModel newType = new DisplayRegisterModel() { DateTransaction = DateTime.Today };
+    RootObjectRegister editType = new RootObjectRegister();
+    [Parameter] public string InitialText { get; set; } = "Select Name Transaction";
+    private string selectedString { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+
+    }
+    private void DoStuff(ChangeEventArgs e)
+    {
+        selectedString = e.Value.ToString();
+        Console.WriteLine("It is definitely: " + selectedString);
+    }
+    private async Task LoadDataAsync()
+    {
+        registertransactions = await RegisterService.OnGetAsync();
+        nametransactions = await TransactionService.OnGetAsync();
+    }
+
+    protected async Task InsertType()
+    {
+        RootObjectRegister p = new RootObjectRegister
+        {
+            Id = newType.Id,
+            DateTransaction = newType.DateTransaction,
+            NameTransactionId = int.Parse(selectedString),
+            Amount = newType.Amount
+        };
+
+        HttpResponseMessage http = await RegisterService.InsertNewTypeAsync(p);
+        registertransactions.Add(p);
+        newType = new DisplayRegisterModel();
+        await LoadDataAsync();
+    }
+
+    protected async Task DeleteType(int id)
+    {
+        await RegisterService.DeleteTypeAsync(id);
+        await LoadDataAsync();
+    }
+}
+

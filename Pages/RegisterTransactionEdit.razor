@@ -1,0 +1,35 @@
+﻿@page "/registertransactionEdit/{registertransactionId:int}"
+@using WebHomeFinanceUI.Models
+@using WebHomeFinanceUI.Data
+@using System.Net.Http
+@using System.Web
+@inject NavigationManager NavigationManager
+@inject RegisterTransactionService RegisterService
+
+<h2>NameTransactionEdit</h2>
+
+<FormRegister ButtonText="Update" editType="updateType"
+              OnValidSubmit="@SaveItem" />
+<h2> </h2>
+
+
+@code {
+
+    [Parameter] public int registertransactionId { get; set; }
+    static HttpClient client = new HttpClient();
+    private List<RootObjectRegister> registertransactions;
+    private RootObjectRegister updateType = new RootObjectRegister();
+
+    protected async override Task OnParametersSetAsync()
+    {
+        registertransactions = await RegisterService.OnGetAsync();
+        updateType = registertransactions.Single(i => i.Id == registertransactionId);
+    }
+
+    protected async Task SaveItem()
+    {
+        await RegisterService.UpdateTypeAsync(updateType);
+        NavigationManager.NavigateTo("RegisterTransaction");
+    }
+
+}

@@ -1,0 +1,56 @@
+﻿@page "/Form"
+@using WebHomeFinanceUI.Models
+@using WebHomeFinanceUI.Data
+@using System.Net.Http
+@inject NameTransactionService TransactionService
+@inject TypeTransactionService TypeService
+
+<EditForm Model="@editType" OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <div>
+            <label> Name :</label>
+            <InputText id="Name" @bind-Value="@editType.Name" />
+            <ValidationMessage For="@(() => editType.Name)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <div>
+            <label> Type Transaction :</label>          
+            @if (typetransactions != null)
+            {
+                <select id="SearchTypeTransaction" name="Name" @onchange="DoStuff" class="form-control1">
+                    <option>@InitialText</option>
+                    @foreach (var tt in typetransactions)
+                    {
+                        <option value="@tt.Id">@tt.TypeTrans</option>
+                    }
+                </select>
+            }
+            <ValidationMessage For="@(() => editType.TypeTransaction)" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-success">@ButtonText</button>
+</EditForm>
+
+@code {
+    [Parameter] public RootObject editType { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    private List<RootObjectType> typetransactions;
+    private List<RootObject> nametransactions;
+    [Parameter] public string InitialText { get; set; } = "Select Type Transaction";
+    private string selectedString { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        typetransactions = await TypeService.OnGetAsync();
+        nametransactions = await TransactionService.OnGetAsync();
+    }
+    private void DoStuff(ChangeEventArgs e)
+    {
+        selectedString = e.Value.ToString();
+        editType.TypeTransaction = int.Parse(selectedString);          
+    }
+
+}
